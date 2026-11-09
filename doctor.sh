@@ -17,4 +17,4 @@ for library in libvirglrenderer.1.dylib libvulkan_kosmickrisp.dylib; do
         [[ -f "$dependency" ]] || { echo "Missing linked dependency: $dependency" >&2; exit 1; }
     done < <(otool -L "$here/private/host-runtime/$library" | awk '$1 ~ /^\/opt\/homebrew\// {print $1}')
 done
-printf 'Host prerequisites present. Tested hardware: M1 Pro and M5 Pro; other Apple Silicon models are not yet verified.\n'
+printf 'Host prerequisites present. Tested hardware: M1 Pro, M2 Pro and M5 Pro; other Apple Silicon models are not yet verified.\n'

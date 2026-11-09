@@ -59,8 +59,10 @@ swfk_0000A691 --> G80 M3 graphics
 - Apple Silicon Mac, macOS **26.0 or newer**
   It uses the Metal 4 API, which has been introduced in macOS 26.
 - Tested on a M1 Pro, macOS 26.7.1, Lima 2.1.4, Krunkit 1.3.2. 
-- Also tested on M5 Pro, macOS 26.7.2, using the Hmi8 BTI compatibility library
-  described below.
+- Also tested on M5 Pro, macOS 26.7.2 and 27.2 (Lima 2.3.0, Krunkit 1.3.2, libkrun 1.19.8 from the
+  `libkrun/krun` tap), using the Hmi8 BTI compatibility library described below.
+- Reported working on an M2 Pro with macOS 27.3 (after the libkrun fix below, see
+  [issue #3](https://github.com/rishik250809/bmw-idrive8.5-emulator/issues/3)).
   Other Apple Silicon models are not yet verified.
 - At least 4 GiB available guest RAM recommended, 16 GiB total host RAM recommended.
 - At least 25 GiB of free disk space before installation (enforced by the installer).
@@ -76,11 +78,11 @@ brew install libkrun/krun/libkrun libkrun/krun/virglrenderer-krun
 brew install libkrun/krun/krunkit
 ```
 
-**Important:** the `libkrun` in Homebrew's core tap (1.19.8 and newer) links MoltenVK directly, which makes
-the project's Mac GPU driver unusable: the HMI crashes with `Extension not supported: VK_KHR_swapchain` and
-the viewer sits on "HMI output is taking longer than expected". `bash doctor.sh` (run by every script) checks
-this and tells you how to fix it; you can also run `bash scripts/check_libkrun.sh`. Homebrew 7 may ask you to
-trust the tap formulae first: `brew trust --formula libkrun/krun/libkrun libkrun/krun/virglrenderer-krun`.
+**Important:** `libkrun` must come from the `libkrun/krun` tap, not from Homebrew's core tap. The core
+`libkrun` (1.19.8 and newer) links MoltenVK directly, so the project's Mac GPU driver is silently ignored.
+`bash doctor.sh` (run by every script) checks this; you can also run `bash scripts/check_libkrun.sh`.
+See [Troubleshooting](#troubleshooting). Homebrew 7 may ask you to trust the tap formulae first:
+`brew trust --formula libkrun/krun/libkrun libkrun/krun/virglrenderer-krun`.
 
 ## First run
 
@@ -148,6 +150,41 @@ limactl shell bmw-idrive85 -- sudo tail -n 50 -F /srv/bmw-idrive85/state/logs/me
 `mesa-g26.touch.txt` contains touch-bridge startup and diagnostic output, not a
 record of every touch.
 
+## Troubleshooting
+
+**The viewer sits on "HMI output is taking longer than expected", or shows a black screen.**
+
+Check the HMI log:
+
+```sh
+limactl shell bmw-idrive85 -- sudo tail -n 40 /srv/bmw-idrive85/state/logs/mesa-g26.stderr.txt
+```
+
+If it contains `Extension not supported: VK_KHR_swapchain` (Vulkan error `-7`), krunkit is not using the
+project's Mac GPU driver. The usual cause is a `libkrun` from Homebrew's core tap (1.19.8 and newer), which
+does not load a separate `libvirglrenderer` that the project driver could replace. `bash doctor.sh` reports
+this. Fix it by switching to the `libkrun/krun` tap build (this replaces Homebrew's `libkrun`; quit other
+libkrun-based VM tools first):
+
+```sh
+bash stop.sh --vm
+brew uninstall --ignore-dependencies libkrun
+brew trust --formula libkrun/krun/libkrun libkrun/krun/virglrenderer-krun || true   # newer Homebrew only
+brew install libkrun/krun/libkrun libkrun/krun/virglrenderer-krun
+bash doctor.sh
+bash start.sh g80-m
+```
+
+To confirm the project driver is loaded, krunkit must list the project's own `libvirglrenderer.1.dylib` and
+`libvulkan_kosmickrisp.dylib` (and no MoltenVK):
+
+```sh
+lsof -a -p "$(cat ~/.lima/bmw-idrive85/krunkit.pid)" -d txt -Fn | grep -iE 'virgl|kosmic|vulkan|moltenvk'
+```
+
+Always start and stop the VM with `start.sh` / `stop.sh`; they set the environment that makes krunkit load
+the project driver. Starting it directly with `limactl` does not.
+
 ## Migrating to another Mac
 
 Keep the existing VM and firmware imports. If Homebrew was copied from another
@@ -186,5 +223,7 @@ Navigation, AR camera, ConnectedDrive and other full vehicle services are not pr
 If you want one more model to be added, hit me up a request in **Issue**.
 
 
+
+Thanks to [vdoto4554872](https://github.com/vdoto4554872) for reporting and testing the libkrun problem ([#3](https://github.com/rishik250809/bmw-idrive8.5-emulator/issues/3)).
 
 ### Credits go to BMW AG, BMW Car IT GmbH, DENSO Corporation, Snapdragon and other Companies. This is a research experiment, it is not meant for redistribution, at all.
