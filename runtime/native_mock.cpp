@@ -157,6 +157,59 @@ static void apply_state(const Snapshot &snapshot, const std::string &document) {
     pending = false;
 }
 
+// On a real car CLanguageService::setDisplayLanguage sends the choice to the vehicle units service and waits for
+// that service to report it back. The emulator has no such service (the proxy pointer stays null and the call
+// returns false immediately), so picking a language in the menu did nothing. This replaces the function with one
+// that reports the chosen language back to the service directly, exactly like the vehicle's answer would.
+namespace language {
+constexpr uintptr_t set_display_language = 0x7b67a40, process_incoming = 0x7b68564, language_table = 0x107fdaa0;
+constexpr uint32_t paciasp = 0xd503233f;
+
+struct Entry {  // 24 bytes: ELanguage, then the VehicleTypes::Language object (vtable, value)
+    uint16_t language;
+    uint8_t padding[6];
+    uintptr_t vtable;
+    uint8_t value;
+    uint8_t rest[7];
+};
+
+static bool set(void *service, uint16_t requested) {
+    auto *table = reinterpret_cast<Entry *const *>(image_base + language_table);
+    const Entry *begin = table[0], *end = table[1];
+    if (!service || !begin || end < begin) return false;
+    for (const Entry *entry = begin; entry != end; ++entry) {
+        if (entry->language != requested) continue;
+        std::fprintf(stderr, "lab-mock: display language %u -> vehicle language %u\n", requested, entry->value);
+        // processIncomingLanguage takes the Language object (vtable at +0, value at +8), i.e. entry + 8.
+        native<void (*)(void *, const void *, bool)>(process_incoming)(service, reinterpret_cast<const uint8_t *>(entry) + 8, true);
+        return true;
+    }
+    std::fprintf(stderr, "lab-mock: display language %u is not in the language table\n", requested);
+    return false;
+}
+
+static void install() {
+    uintptr_t target = image_base + set_display_language;
+    if (*reinterpret_cast<uint32_t *>(target) != paciasp) {
+        std::fprintf(stderr, "lab-mock: language hook signature mismatch; disabled\n");
+        return;
+    }
+    // ldr x16, #8 ; br x16 ; .quad hook
+    uint32_t patch[4] = {0x58000050, 0xd61f0200, 0, 0};
+    uintptr_t hook = reinterpret_cast<uintptr_t>(&set);
+    std::memcpy(&patch[2], &hook, sizeof(hook));
+    int descriptor = open("/proc/self/mem", O_RDWR | O_CLOEXEC);
+    bool written = descriptor >= 0 && pwrite(descriptor, patch, sizeof(patch), static_cast<off_t>(target)) == static_cast<ssize_t>(sizeof(patch));
+    if (descriptor >= 0) close(descriptor);
+    if (!written) {
+        std::fprintf(stderr, "lab-mock: cannot patch setDisplayLanguage; language selection stays disabled\n");
+        return;
+    }
+    __builtin___clear_cache(reinterpret_cast<char *>(target), reinterpret_cast<char *>(target + sizeof(patch)));
+    std::fprintf(stderr, "lab-mock: display language selection enabled\n");
+}
+}  // namespace language
+
 static void *worker(void *) {
     std::this_thread::sleep_for(std::chrono::seconds(60));
     auto dispatch = native<void (*)(void *, std::function<void ()>, std::shared_ptr<void>)>(0x510c568);
@@ -192,6 +245,7 @@ __attribute__((constructor)) static void initialize() {
         std::fprintf(stderr, "lab-mock: dispatcher signature mismatch; disabled\n");
         return;
     }
+    language::install();
     pthread_t thread;
     if (!pthread_create(&thread, nullptr, worker, nullptr)) pthread_detach(thread);
     std::fprintf(stderr, "lab-mock: experimental native state mock enabled (not Bluetooth)\n");
