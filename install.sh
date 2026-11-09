@@ -32,13 +32,27 @@ say 'Installing tools (Homebrew)'
 # Always "brew install": no-op when present, and marks each formula as wanted so
 # Homebrew's automatic cleanup never removes it (the Mac GPU driver links against them).
 formulas=(lima vulkan-loader libepoxy spirv-tools molten-vk)
-command -v krunkit >/dev/null || formulas+=(libkrun/krun/krunkit)
 python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null || formulas+=(python@3.13)
-HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_UPGRADE=1 brew install --quiet "${formulas[@]}" 2>&1 | grep -v 'already installed' || true
-for formula in lima vulkan-loader libepoxy spirv-tools molten-vk; do
-    brew list --formula "$formula" >/dev/null 2>&1 || fail "Homebrew could not install $formula."
+mkdir -p "$ROOT/.local"
+brew_log="$ROOT/.local/brew-install.log"
+: > "$brew_log"
+brew_install() { HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_UPGRADE=1 brew install --quiet "$@" >> "$brew_log" 2>&1 || true; }
+brew_install "${formulas[@]}"
+if ! command -v krunkit >/dev/null; then
+    # The project's GPU driver needs the libkrun from the libkrun/krun tap (it links a separate libvirglrenderer;
+    # the core tap's libkrun 1.19.8+ does not). Install it first, and name every formula explicitly, so that
+    # krunkit does not pull in the core libkrun as a dependency and Homebrew trusts the tap formulae.
+    brew_install libkrun/krun/libkrun libkrun/krun/virglrenderer-krun
+    brew_install libkrun/krun/krunkit
+fi
+grep -v 'already installed' "$brew_log" || true
+for formula in lima vulkan-loader libepoxy spirv-tools molten-vk libkrun; do
+    brew list --formula "$formula" >/dev/null 2>&1 || fail "Homebrew could not install $formula. Details: $brew_log"
 done
-command -v krunkit >/dev/null || fail 'Homebrew could not install krunkit.'
+command -v krunkit >/dev/null || fail "Homebrew could not install krunkit. Details: $brew_log"
+libkrun_status=0
+bash scripts/check_libkrun.sh || libkrun_status=$?
+[[ "$libkrun_status" -ne 1 ]] || fail "The installed libkrun cannot load the project graphics driver (see above). Homebrew output: $brew_log"
 python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null || fail 'Python 3.11 or newer is required; check that the Homebrew Python is on your PATH.'
 ok 'lima, krunkit, python, Vulkan loader and libraries present'
 

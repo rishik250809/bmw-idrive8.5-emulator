@@ -44,6 +44,26 @@ if ! limactl shell --workdir=/tmp "$VM" -- sh -c 'grep -qw console=hvc0 /proc/cm
     limactl stop "$VM"
     lima_start "$VM" --tty=false
 fi
+# Final check: krunkit must really have loaded the project GPU driver. If it did not (for example because
+# the installed libkrun links MoltenVK directly), the HMI later fails with "Extension not supported:
+# VK_KHR_swapchain" and the viewer only says "taking longer than expected".
+krunkit_pid="$(cat "$(limactl list --format '{{.Dir}}' "$VM")/krunkit.pid" 2>/dev/null || true)"
+if [[ "$krunkit_pid" =~ ^[0-9]+$ ]]; then
+    loaded_libraries="$(lsof -a -p "$krunkit_pid" -d txt -Fn 2>/dev/null || true)"
+    project_driver="$(python3 -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).resolve())' \
+        "$ROOT/private/host-runtime/libvirglrenderer.1.dylib")"
+    if [[ -n "$loaded_libraries" ]] && ! grep -Fxq "n$project_driver" <<< "$loaded_libraries"; then
+        python3 "$ROOT/tools/boot_splash.py" status "$ROOT" "$VIEWER_PORT" 'The VM did not load the project GPU driver. See the terminal output.'
+        {
+            printf '\nThe VM is running, but krunkit did NOT load the project GPU driver:\n  %s\n' "$project_driver"
+            printf 'GPU libraries it loaded instead:\n'
+            grep -iE 'virgl|kosmic|vulkan|moltenvk' <<< "$loaded_libraries" | sed 's/^n/  /' || true
+            printf 'The HMI would fail with "Extension not supported: VK_KHR_swapchain".\n'
+            printf 'Check the libkrun build with: bash scripts/check_libkrun.sh\n'
+        } >&2
+        exit 1
+    fi
+fi
 limactl shell --workdir=/tmp "$VM" -- sudo dmesg --color=never > "$ROOT/.local/linux-dmesg.log.tmp"
 mv "$ROOT/.local/linux-dmesg.log.tmp" "$ROOT/.local/linux-dmesg.log"
 python3 "$ROOT/tools/boot_splash.py" status "$ROOT" "$VIEWER_PORT" 'Fedora is ready. Preparing BMW HMI…'

@@ -7,6 +7,10 @@ for command in limactl krunkit python3 ssh otool; do
     command -v "$command" >/dev/null || { printf 'Missing prerequisite: %s\n' "$command" >&2; exit 1; }
 done
 python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else "Python 3.11 or newer is required.")'
+# The project driver replaces libvirglrenderer by name, which needs a libkrun that links it (see the script).
+libkrun_status=0
+bash "$here/scripts/check_libkrun.sh" || libkrun_status=$?
+[[ "$libkrun_status" -ne 1 ]] || exit 1
 for library in libvirglrenderer.1.dylib libvulkan_kosmickrisp.dylib; do
     [[ -f "$here/private/host-runtime/$library" ]] || { echo "Missing private/host-runtime/$library" >&2; exit 1; }
     while IFS= read -r dependency; do

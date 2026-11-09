@@ -71,8 +71,16 @@ Install missing prerequisites yourself, after reviewing their upstream sources:
 
 ```sh
 brew install lima python vulkan-loader libepoxy spirv-tools molten-vk
+# libkrun must come from the libkrun/krun tap (not Homebrew's core tap) and be installed before krunkit:
+brew install libkrun/krun/libkrun libkrun/krun/virglrenderer-krun
 brew install libkrun/krun/krunkit
 ```
+
+**Important:** the `libkrun` in Homebrew's core tap (1.19.8 and newer) links MoltenVK directly, which makes
+the project's Mac GPU driver unusable: the HMI crashes with `Extension not supported: VK_KHR_swapchain` and
+the viewer sits on "HMI output is taking longer than expected". `bash doctor.sh` (run by every script) checks
+this and tells you how to fix it; you can also run `bash scripts/check_libkrun.sh`. Homebrew 7 may ask you to
+trust the tap formulae first: `brew trust --formula libkrun/krun/libkrun libkrun/krun/virglrenderer-krun`.
 
 ## First run
 
