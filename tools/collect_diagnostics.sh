@@ -65,14 +65,28 @@ collect() {
             python3 -I - "$receipt" <<'PY' 2>&1
 import json, sys
 d = json.load(open(sys.argv[1]))
-print('poured_from_bottle=%s built_as_bottle=%s homebrew=%s built_on_os=%s' % (
+print('poured_from_bottle=%s built_as_bottle=%s homebrew=%s built_on_os=%s tap=%s' % (
     d.get('poured_from_bottle'), d.get('built_as_bottle'), d.get('homebrew_version'),
-    (d.get('built_on') or {}).get('os_version')))
+    (d.get('built_on') or {}).get('os_version'), (d.get('source') or {}).get('tap')))
 PY
         else
             printf '%s: no install receipt found\n' "$formula"
         fi
     done
+    # The project replaces Homebrew's libvirglrenderer by name (DYLD_LIBRARY_PATH). That can only work
+    # if libkrun links a separate libvirglrenderer.1.dylib. If it is missing here, libkrun has it built in.
+    libkrun_lib="$(ls /opt/homebrew/opt/libkrun/lib/libkrun.1.dylib 2>/dev/null)"
+    printf '\nlibkrun dependencies (%s):\n' "$(brew list --versions libkrun 2>/dev/null)"
+    if [[ -n "$libkrun_lib" ]]; then
+        otool -L "$libkrun_lib" 2>&1 | tail -n +2 | awk '{print $1}'
+        if otool -L "$libkrun_lib" 2>/dev/null | grep -q 'libvirglrenderer'; then
+            printf 'RESULT: libkrun links a separate libvirglrenderer (the project driver can replace it)\n'
+        else
+            printf 'RESULT: libkrun does NOT link a separate libvirglrenderer (the project driver CANNOT replace it)\n'
+        fi
+    else
+        printf 'libkrun library not found\n'
+    fi
 
     section 'krunkit binary'
     krunkit_real="$(readlink -f "$(command -v krunkit)" 2>/dev/null)"
@@ -138,5 +152,5 @@ PY
 }
 
 # Hide the home folder / user name before the report is shared.
-collect 2>&1 | sed "s#$HOME#~#g; s#/Users/[^/ ]*#/Users/<user>#g" | tee "$OUT"
+collect 2>&1 | sed "s#$HOME#~#g; s#/Users/[^/ ]*#/Users/<user>#g; s#[[:space:]]$(id -un)[[:space:]]# <user> #g" | tee "$OUT"
 printf '\nSaved to %s - paste its contents into the GitHub issue.\n' "$OUT"
