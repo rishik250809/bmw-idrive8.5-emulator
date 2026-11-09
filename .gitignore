@@ -19,3 +19,4 @@ __pycache__/
 id_*
 /bmw-files/*
 !/bmw-files/README.md
+/diagnostics.txt
