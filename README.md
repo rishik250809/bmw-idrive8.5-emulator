@@ -46,6 +46,7 @@ SWFL:
 swfl_00009FC6(ivi_fs.zip) --> contains the actual HMI8 binary and it's supporting libraries and services
 swfl_00009FF7(ROOT_rootfs.zip) ---> Base linux filesystem, of a MGU22 Headunit. 
 swfl_00009FF9(ext_fs.zip) --> additional libraries for ROOT and IVI
+swfl_00009FC7(oap_fs.zip) --> (Optional) only meant for if you want to try out your custom apps. 
 
 SWFK:
 swfk_0000A6B0 --> Shared BMW interface resources
