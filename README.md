@@ -150,6 +150,43 @@ limactl shell bmw-idrive85 -- sudo tail -n 50 -F /srv/bmw-idrive85/state/logs/me
 `mesa-g26.touch.txt` contains touch-bridge startup and diagnostic output, not a
 record of every touch.
 
+## Custom apps (experimental)
+
+The emulator can run one JavaScript **OAP / RHMI app** (for example
+[idrive8-app-test](https://github.com/rishik250809/idrive8-app-test)) on the
+original firmware: the app appears as a native tile in the HMI's **Apps** menu,
+Hmi8 draws its screen from the app's RHMI description, and touch presses reach
+the app's code. It uses the firmware's own ARM Node.js and an SDK extracted
+locally from the given OAP_FS BMW firmware (no BMW SDK is in this repository), and no headunit
+or SSH access.
+
+Start the emulator first. Custom apps need one extra firmware partition, the
+ARM **OAP** filesystem (SWFL 00009FC7), next to the others in
+`bmw-files/extracted/oap_fs/rootfs/` (see `bmw-files/README.md`). Then:
+
+```sh
+bash apps.sh import-extracted                                      # once: adds the ARM oap_fs partition from bmw-files/extracted/
+bash apps.sh install /path/to/custom-app                     # installs/replaces the app for the current profile
+bash apps.sh start                                                 # run again after every HMI/container restart
+bash apps.sh status                                                # also: bash apps.sh stop
+```
+
+Limits for now: one compatible app at a time, only the counter app's package layout is
+tested, and only a small local adapter replaces the stock MainApp (no
+bookmarks, downloads, app store, cloud or hardware resources). An app that
+reads vehicle data logs a timeout, because there is no vehicle backend.
+Details: [`docs/CUSTOM_APPS.md`](docs/CUSTOM_APPS.md).
+
+## Simulator pages
+
+Besides coding (`http://localhost:5012`), the settings port serves:
+
+- `/mocks` — climate bar, media text and M Setup selections (saved per preset).
+- `/services` — vehicle and service simulator ([docs](docs/SERVICE_SIMULATOR.md)).
+- `/pdc` — experimental park distance control: opens the native PARKING page
+  with the PDC-only layout and sends sensor values. The coloured sensor
+  sectors do not render yet ([docs](docs/PDC_SIMULATOR.md)).
+
 ## Troubleshooting
 
 **The viewer sits on "HMI output is taking longer than expected", or shows a black screen.**

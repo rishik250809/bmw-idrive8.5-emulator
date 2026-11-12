@@ -14,6 +14,7 @@ bmw-files/extracted/
   swfk_0000aed4_007_023_004/
   swfk_0000a6b2_007_023_004/    (BMW M)
   swfk_0000a691_007_023_004/    (G80 LCI)
+  oap_fs/rootfs/                (optional, only for custom apps: ARM OAP partition, SWFL 00009FC7; download from the shared drive)
 ```
 
 Then run `bash install.sh` from the project folder. 
