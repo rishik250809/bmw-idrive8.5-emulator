@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hmi8 park distance control</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui;background:#10131a;color:#e4e9f3}body{max-width:880px;margin:30px auto;padding:0 18px}section{background:#171d29;border-radius:12px;padding:22px;margin:18px 0}label{display:block;margin:10px 0}input,button,select,a{font:inherit;color:inherit;background:#202838;border:1px solid #40516e;border-radius:6px;padding:9px}select{width:100%}.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}.row label{flex:1;min-width:150px}.muted{color:#aab7cb}#message{white-space:pre-wrap}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.grid label{margin:0;font-size:13px;color:#aab7cb}.grid input{width:100%;box-sizing:border-box;padding:0}.grid output{display:block;color:#e4e9f3;font-variant-numeric:tabular-nums}
+</style>
+<h1>Park distance control</h1>
+<p><a href="/">← Coding & settings</a> <a href="/mocks">Climate & music mocks</a></p>
+<p class="muted">Experimental. Fakes the parking ECU's SOME/IP services (parkmenu layout, front/rear distances, flank protection) and runs the firmware DidUi renderer next to Hmi8. Open the PARKING page in the viewer after starting. Distances are raw sensor gap values (0–255, 255 = no obstacle); their physical units are not verified.</p>
+<p id="message" role="status">Connecting…</p>
+<section><h2>Simulator</h2>
+<div class="row">
+<label>Mode<select id="mode"><option value="live">Live (values below)</option><option value="demo:2">DidUi demo scene 2 (cross-traffic)</option><option value="demo:1">DidUi demo scene 1</option><option value="demo:3">DidUi demo scene 3</option><option value="demo:4">DidUi demo scene 4</option><option value="demo:5">DidUi demo scene 5</option></select></label>
+<label>Car & sensor size<select id="zoom"><option value="1">Original</option><option value="1.25">Larger (125%)</option><option value="1.5">Largest (150%)</option></select></label>
+</div>
+<p class="muted">Size changes apply with Start / restart. The largest size can crop the outer sensor zones.</p>
+<div class="row"><button id="start">Start / restart</button><button id="stop">Stop</button></div>
+<p class="muted" id="helpers"></p>
+</section>
+<section><h2>Parking menu</h2>
+<label><input id="on" type="checkbox"> Request the parking menu (HMI_REQUESTED / fade in)</label>
+<label>Layout<select id="layout"></select></label>
+</section>
+<section><h2>Sensor gaps</h2>
+<div class="row"><button type="button" data-preset="255">All clear</button><button type="button" data-preset="120">Far</button><button type="button" data-preset="60">Medium</button><button type="button" data-preset="20">Close</button><button type="button" data-preset="0">Contact</button></div>
+<h3>Front (left → right)</h3><div class="grid" id="front"></div>
+<h3>Rear (left → right)</h3><div class="grid" id="rear"></div>
+<h3>Left flank (front → rear)</h3><div class="grid" id="left"></div>
+<h3>Right flank (front → rear)</h3><div class="grid" id="right"></div>
+</section>
+<script>
+const message=document.querySelector('#message');
+const groups={front:8,rear:8,left:6,right:6};
+async function request(body){const response=await fetch('/api/pdc',body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Hmi8-Request':'1'},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error||response.status);return result;}
+function build(){for(const [name,count] of Object.entries(groups)){const box=document.getElementById(name);for(let i=0;i<count;i++){const label=document.createElement('label');label.innerHTML=`${name[0].toUpperCase()}${i+1}<input type="range" min="0" max="255" value="255" data-group="${name}"><output>255</output>`;box.append(label);}}
+  document.querySelectorAll('input[type=range]').forEach(input=>input.oninput=()=>{input.nextElementSibling.value=input.value;schedule();});}
+function status(result){const helpers=Object.entries(result.helpers).map(([k,v])=>`${k}: ${v?'running':'stopped'}`).join(', ');
+  document.querySelector('#helpers').textContent=`Mode: ${result.mode}${helpers?' — '+helpers:''}${result.stale?' — Hmi8 restarted, press Start again':''}`;}
+function show(result){const state=result.state;status(result);document.querySelector('#on').checked=state.on;
+  const layout=document.querySelector('#layout');if(!layout.options.length)for(const [value,name] of Object.entries(result.layouts)){layout.add(new Option(`${value} — ${name}`,value));}
+  layout.value=state.layout;
+  document.querySelector('#zoom').value=String(state.zoom??1.25);
+  for(const name of Object.keys(groups)){document.querySelectorAll(`#${name} input`).forEach((input,i)=>{input.value=state[name][i];input.nextElementSibling.value=state[name][i];});}
+}
+function collect(){const state={action:'set',on:document.querySelector('#on').checked,layout:Number(document.querySelector('#layout').value),zoom:Number(document.querySelector('#zoom').value)};
+  for(const name of Object.keys(groups))state[name]=[...document.querySelectorAll(`#${name} input`)].map(input=>Number(input.value));return state;}
+let timer=null;function schedule(){clearTimeout(timer);timer=setTimeout(async()=>{try{show(await request(collect()));message.textContent='Applied.';}catch(error){message.textContent='Error: '+error.message;}},150);}
+document.querySelector('#on').onchange=schedule;document.querySelector('#layout').onchange=schedule;
+document.querySelectorAll('[data-preset]').forEach(button=>button.onclick=()=>{document.querySelectorAll('input[type=range]').forEach(input=>{input.value=button.dataset.preset;input.nextElementSibling.value=input.value;});schedule();});
+document.querySelector('#start').onclick=async()=>{message.textContent='Starting (first start builds the helper and copies DidUi assets)…';const [mode,demo]=document.querySelector('#mode').value.split(':');
+  try{await request(collect());show(await request({action:'start',mode,demo:Number(demo||0)}));message.textContent='Started. Open PARKING in the viewer.';}catch(error){message.textContent='Error: '+error.message;}};
+document.querySelector('#stop').onclick=async()=>{try{show(await request({action:'stop'}));message.textContent='Stopped.';}catch(error){message.textContent='Error: '+error.message;}};
+build();request().then(result=>{show(result);message.textContent='Ready.';}).catch(error=>message.textContent='Error: '+error.message);
+setInterval(()=>request().then(status).catch(()=>{}),5000);
+</script>
+</html>

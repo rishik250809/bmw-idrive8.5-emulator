@@ -16,6 +16,7 @@ import urllib.parse
 sys.path.insert(0, '/mnt/hmi8-lab')
 from cafd import Cafd, GUEST_METADATA, load_coding, save_coding
 import mock_state
+import pdc_sim
 from updates import UpdateChecker
 
 
@@ -55,9 +56,22 @@ class Runtime:
             raise ValueError('HMI_STREAM_FPS must be 1..60 and HMI_PREVIEW_SCALE must be 1, 2 or 4')
         self.metadata = Cafd(GUEST_METADATA)
         self.updates = UpdateChecker()
+        self.services = mock_state.Services(STATE)
+        self.pdc = pdc_sim.PdcSimulator()
         self.hmi = subprocess.Popen(['bash', '/mnt/hmi8-lab/launch_guest.sh', 'mesa-g26'], start_new_session=True)
         self.thread = threading.Thread(target=self.capture_frames, daemon=True)
         self.thread.start()
+        self.service_thread = threading.Thread(target=self.simulate_services, daemon=True)
+        self.service_thread.start()
+
+    def simulate_services(self):
+        while not self.stopping.wait(1):
+            with self.config_lock:
+                try:
+                    self.services.tick()
+                    self.services.error = None
+                except (OSError, ValueError, KeyError, TypeError) as error:
+                    self.services.error = str(error)
 
     def capture_frames(self):
         with (STATE / 'logs/browser-capture.txt').open('ab', buffering=0) as errors:
@@ -135,6 +149,11 @@ class Runtime:
 
     def stop(self):
         self.stopping.set()
+        try:
+            self.pdc.stop()
+        except Exception:
+            pass
+        self.service_thread.join(timeout=3)
         with self.condition:
             self.condition.notify_all()
         with self.input_lock:
@@ -192,13 +211,25 @@ class Handler(http.server.BaseHTTPRequestHandler):
         request = urllib.parse.urlsplit(self.path)
         runtime = self.server.runtime
         settings = self.server.settings
-        if not settings and request.path in ('/api/coding', '/api/cafd', '/api/presets', '/api/mock', '/mocks', '/api/updates'):
+        if not settings and request.path in ('/api/coding', '/api/cafd', '/api/presets', '/api/mock', '/mocks', '/api/updates', '/services', '/api/services', '/pdc', '/api/pdc'):
             self.respond(404, {'error': 'Use the settings page (viewer port + 1, normally 5012)'})
             return
         if request.path == '/':
             self.respond(200, (WEB / ('settings.html' if settings else 'index.html')).read_bytes(), 'text/html; charset=utf-8')
         elif request.path == '/mocks' and settings:
             self.respond(200, mock_state.page(WEB / 'mocks.html'), 'text/html; charset=utf-8')
+        elif request.path == '/pdc' and settings:
+            self.respond(200, (WEB / 'pdc.html').read_bytes(), 'text/html; charset=utf-8')
+        elif request.path == '/api/pdc' and settings:
+            self.respond(200, runtime.pdc.snapshot())
+        elif request.path == '/services' and settings:
+            self.respond(200, mock_state.services_page(), 'text/html; charset=utf-8')
+        elif request.path == '/api/services' and settings:
+            try:
+                with runtime.config_lock:
+                    self.respond(200, runtime.services.snapshot())
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                self.respond(400, {'error': str(error)})
         elif request.path == '/api/mock' and settings:
             try:
                 with runtime.config_lock:
@@ -319,6 +350,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             elif self.path == '/api/mock' and self.server.settings:
                 with runtime.config_lock:
                     self.respond(200, mock_state.save(STATE, command))
+            elif self.path == '/api/pdc' and self.server.settings:
+                try:
+                    self.respond(200, runtime.pdc.command(command))
+                except RuntimeError as error:
+                    self.respond(409, {'error': str(error)})
+            elif self.path == '/api/services' and self.server.settings:
+                with runtime.config_lock:
+                    self.respond(200, runtime.services.command(command))
             elif self.path == '/api/updates' and self.server.settings:
                 self.respond(200, runtime.updates.check())
             elif self.path == '/api/convert' and self.server.settings:

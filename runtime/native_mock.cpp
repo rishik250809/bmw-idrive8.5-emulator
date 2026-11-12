@@ -106,8 +106,8 @@ static void apply_climate(const Snapshot &snapshot, float left, float right, boo
     using Notification = void (*)(void *, const std::vector<Message32> &);
     if (climate) {
         std::vector<Message32> temperatures, on_states;
-        for (unsigned zone : {0u, 1u}) {
-            Temperature temperature{zone, zone ? right : left, 0};
+        for (unsigned zone : {1u, 2u}) {
+            Temperature temperature{zone, zone == 2 ? right : left, 0};
             SystemOn on_state{zone, static_cast<unsigned char>(system_on), 0};
             temperatures.push_back(native<Message32 (*)(const Temperature &)>(0x7c31ee0)(temperature));
             on_states.push_back(native<Message32 (*)(const SystemOn &)>(0x7c32140)(on_state));
@@ -143,6 +143,17 @@ static void apply_state(const Snapshot &snapshot, const std::string &document) {
     float left = 21.0f, right = 22.0f;
     int system_on = 1;
     input >> left >> right >> system_on;
+    std::ifstream feedback("/run/lab-mock/climate-feedback.txt");
+    float feedback_left, feedback_right;
+    int feedback_on;
+    if (feedback >> feedback_left >> feedback_right >> feedback_on
+        && std::isfinite(feedback_left) && std::isfinite(feedback_right)
+        && feedback_left >= 16 && feedback_left <= 28 && feedback_right >= 16 && feedback_right <= 28
+        && (feedback_on == 0 || feedback_on == 1)) {
+        left = feedback_left;
+        right = feedback_right;
+        system_on = feedback_on;
+    }
     if (!std::isfinite(left) || !std::isfinite(right) || left < 16 || left > 28 || right < 16 || right > 28) {
         pending = false;
         return;

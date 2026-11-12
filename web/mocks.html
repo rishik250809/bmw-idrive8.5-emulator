@@ -14,7 +14,7 @@
 <label>Driver temperature (°C)<input id="left_temperature" type="number" min="16" max="28" step="0.5" required></label>
 <label>Passenger temperature (°C)<input id="right_temperature" type="number" min="16" max="28" step="0.5" required></label>
 </div><label><input id="climate_on" type="checkbox"> Climate on (simulated AUTO display)</label>
-<p class="muted">This controls the native climate bar. The HMI’s +/− buttons are not yet connected to this mock; use these temperature fields.</p></section>
+<p class="muted">This controls the native climate bar. Its HMI +/− touch buttons also save setpoints through the build-gated native feedback hook. The full climate page still lacks backend availability data.</p></section>
 <section><h2>Custom music text</h2>
 <label>Song title<input id="title" maxlength="128"></label>
 <label>Artist<input id="artist" maxlength="128"></label>

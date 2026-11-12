@@ -3,6 +3,11 @@
 This document describes the original research installation. The portable
 bundle enables the same mocks at startup; use `../README.md` for its commands.
 
+The portable build has since gained native footer +/- feedback and a subset
+of native vehicle signals. See `NATIVE_SIGNALS.md` for the current portable
+implementation and limitations. The research-installation notes below describe
+the earlier climate/music-only implementation.
+
 Verified on the private GPU session on November 4, 2026. This is an opt-in
 display/domain-state simulation for the supplied Hmi8 build, not Bluetooth,
 an audio player, or a complete HVAC service.
