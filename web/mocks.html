@@ -1,34 +1,34 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hmi8 climate & music mocks</title>
+<title>Hmi8 iklim ve müzik simülasyonları</title>
 <style>
 :root{color-scheme:dark;font:16px system-ui;background:#10131a;color:#e4e9f3}body{max-width:820px;margin:30px auto;padding:0 18px}section{background:#171d29;border-radius:12px;padding:22px;margin:18px 0}label{display:block;margin:14px 0}input,button,a{font:inherit;color:inherit;background:#202838;border:1px solid #40516e;border-radius:6px;padding:10px}input:not([type=checkbox]){display:block;box-sizing:border-box;width:100%;margin-top:6px}.row{display:flex;gap:18px;flex-wrap:wrap}.row label{flex:1;min-width:150px}.muted{color:#aab7cb}#message{white-space:pre-wrap}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}
 </style>
-<h1>Climate & music mocks</h1>
-<p><a href="/">← Coding & settings</a></p>
-<p class="muted">Experimental native HMI state simulation. No real Bluetooth pairing, audio playback, or vehicle HVAC. Climate panel availability and normal media source selection still require missing backend services.</p>
-<p id="message" role="status">Connecting…</p>
+<h1>İklim ve müzik simülasyonları</h1>
+<p><a href="/">← Kodlama ve ayarlar</a></p>
+<p class="muted">Deneysel yerel HMI durum simülasyonu. Gerçek Bluetooth eşleşmesi, ses oynatma veya araç HVAC sistemi yoktur. İklim paneli erişilebilirliği ve normal medya kaynağı seçimi hâlâ eksik arka plan hizmetlerini gerektirir.</p>
+<p id="message" role="status">Bağlanılıyor…</p>
 <form id="controls">
-<section><h2>Climate bar</h2><div class="row">
-<label>Driver temperature (°C)<input id="left_temperature" type="number" min="16" max="28" step="0.5" required></label>
-<label>Passenger temperature (°C)<input id="right_temperature" type="number" min="16" max="28" step="0.5" required></label>
-</div><label><input id="climate_on" type="checkbox"> Climate on (simulated AUTO display)</label>
-<p class="muted">This controls the native climate bar. Its HMI +/− touch buttons also save setpoints through the build-gated native feedback hook. The full climate page still lacks backend availability data.</p></section>
-<section><h2>Custom music text</h2>
-<label>Song title<input id="title" maxlength="128"></label>
-<label>Artist<input id="artist" maxlength="128"></label>
-<label>Album<input id="album" maxlength="128"></label>
-<label>Source label<input id="source" maxlength="128"></label>
-<p class="muted">A Bluetooth label is only simulated text—not a connected phone. Native Home media bindings receive the metadata.</p></section>
-<button id="apply" type="submit" disabled>Apply live mock values</button>
-<button id="reload" type="button">Reload saved values</button>
+<section><h2>İklim çubuğu</h2><div class="row">
+<label>Sürücü sıcaklığı (°C)<input id="left_temperature" type="number" min="16" max="28" step="0.5" required></label>
+<label>Yolcu sıcaklığı (°C)<input id="right_temperature" type="number" min="16" max="28" step="0.5" required></label>
+</div><label><input id="climate_on" type="checkbox"> İklimi aç (simüle edilmiş AUTO gösterimi)</label>
+<p class="muted">Bu ayar yerel iklim çubuğunu kontrol eder. HMI üzerindeki +/− dokunmatik düğmeleri de derleme korumalı yerel geri bildirim bağlantısı üzerinden ayarları kaydeder. Tam iklim sayfasında hâlâ arka plan erişilebilirlik verileri bulunmaz.</p></section>
+<section><h2>Özel müzik metni</h2>
+<label>Şarkı adı<input id="title" maxlength="128"></label>
+<label>Sanatçı<input id="artist" maxlength="128"></label>
+<label>Albüm<input id="album" maxlength="128"></label>
+<label>Kaynak etiketi<input id="source" maxlength="128"></label>
+<p class="muted">Bluetooth etiketi yalnızca simüle edilmiş metindir; bağlı bir telefonu göstermez. Yerel Ana Sayfa medya bağlantıları bu üst veriyi alır.</p></section>
+<button id="apply" type="submit" disabled>Canlı simülasyon değerlerini uygula</button>
+<button id="reload" type="button">Kayıtlı değerleri yeniden yükle</button>
 </form>
 <script>
 const message=document.querySelector('#message'),apply=document.querySelector('#apply');
 const fields=['title','artist','album','source','left_temperature','right_temperature','climate_on'];
 async function request(body){const response=await fetch('/api/mock',body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Hmi8-Request':'1'},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error||response.status);return result;}
-async function load(){try{const result=await request();for(const name of fields){const input=document.getElementById(name);if(input.type==='checkbox')input.checked=result.state[name];else input.value=result.state[name];}apply.disabled=!(result.available&&result.enabled);message.textContent='Profile: '+result.profile+'\n'+(apply.disabled?'Native mock is not installed/enabled in this runtime.':'Live updates enabled. Allow about one minute after HMI boot; no restart needed when editing these values.');}catch(error){apply.disabled=true;message.textContent=error.message;}}
+async function load(){try{const result=await request();for(const name of fields){const input=document.getElementById(name);if(input.type==='checkbox')input.checked=result.state[name];else input.value=result.state[name];}apply.disabled=!(result.available&&result.enabled);message.textContent='Profil: '+result.profile+'\n'+(apply.disabled?'Yerel simülasyon bu çalışma zamanında kurulu veya etkin değil.':'Canlı güncellemeler etkin. HMI açılışından sonra yaklaşık bir dakika bekleyin; bu değerleri düzenlerken yeniden başlatmaya gerek yok.');}catch(error){apply.disabled=true;message.textContent=error.message;}}
 document.querySelector('#controls').onsubmit=async event=>{event.preventDefault();apply.disabled=true;try{const state={};for(const name of fields){const input=document.getElementById(name);state[name]=input.type==='checkbox'?input.checked:input.type==='number'?Number(input.value):input.value;}const result=await request(state);message.textContent='Profile: '+result.profile+'\n'+result.note;}catch(error){message.textContent=error.message;}finally{apply.disabled=false;}};
 document.querySelector('#reload').onclick=load;load();
 </script>

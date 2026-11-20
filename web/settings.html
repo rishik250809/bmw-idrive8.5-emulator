@@ -1,24 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hmi8 coding & settings</title>
+<title>Hmi8 kodlama ve ayarlar</title>
 <style>
 :root{color-scheme:dark;font:15px system-ui;background:#10131a;color:#e4e9f3}body{margin:24px auto;padding:0 18px;max-width:1400px}section{background:#171d29;padding:20px;border-radius:10px;margin:16px 0}.columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,input,textarea,select,a{font:inherit;color:inherit;background:#202838;border:1px solid #40516e;border-radius:5px;padding:8px}button,a{cursor:pointer}textarea{box-sizing:border-box;width:100%;min-height:230px;font:13px ui-monospace,monospace}.muted{color:#9da9bf}#message{color:#f3c982;position:sticky;top:0;background:#10131a;padding:12px}#definitions{max-height:650px;overflow:auto}details{margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:850px){.columns{grid-template-columns:1fr}}
 </style>
-<h1>Coding & settings</h1><p class="row"><a id="viewer" target="_blank" rel="noopener">Open viewer ↗</a><a href="/mocks">Climate & music mocks</a><a href="/services">Vehicle & service simulator</a><a href="/pdc">Park distance control</a><button id="restart">Restart HMI container</button><button id="save-restart">Save coding & restart</button></p>
-<p class="muted">Restart controls restart this container via Compose, not the Docker engine. No Docker socket is mounted. Firmware startup may take 90 seconds.</p>
-<p id="message" role="status">Connecting…</p>
-<section aria-labelledby="update-heading"><h2 id="update-heading">Software updates</h2>
-<p id="installed-version">Reading installed version…</p><p class="muted">Installed commit: <code id="installed-commit">unknown</code></p>
-<p id="update-message" role="status">Not checked.</p><p id="update-release" class="muted"></p>
-<p class="row"><button id="check-updates">Check for updates</button><a id="update-website" target="_blank" rel="noopener noreferrer" hidden>Open project on GitHub ↗</a><a id="update-releases" target="_blank" rel="noopener noreferrer" hidden>Release downloads ↗</a></p>
-<p class="muted">Checks contact GitHub only when requested and are cached for five minutes. Nothing is downloaded or installed automatically. This updates the emulator, not BMW firmware.</p>
-<details><summary>How to install an update</summary><p>In Terminal, open your emulator project folder and run:</p><pre>bash update.sh</pre><p class="muted">This pulls your tracked branch (fast-forward only), copies the source into Lima, and restarts your current vehicle profile. Local changes or a detached release tag require manual review. Coding, presets, mocks and imported BMW files are kept. For a ZIP download, get the new project files and run its install.sh against your existing VM.</p></details></section>
+<h1>Kodlama ve ayarlar</h1><p class="row"><a id="viewer" target="_blank" rel="noopener">Görüntüleyiciyi aç ↗</a><a href="/mocks">İklim ve müzik simülasyonları</a><a href="/services">Araç ve hizmet simülatörü</a><a href="/pdc">Park mesafe kontrolü</a><button id="restart">HMI kapsayıcısını yeniden başlat</button><button id="save-restart">Kodlamayı kaydet ve yeniden başlat</button></p>
+<p class="muted">Yeniden başlatma denetimleri Docker motorunu değil, Compose aracılığıyla bu kapsayıcıyı yeniden başlatır. Docker soketi bağlanmamıştır. Donanım yazılımı başlangıcı 90 saniye sürebilir.</p>
+<p id="message" role="status">Bağlanılıyor…</p>
+<section aria-labelledby="update-heading"><h2 id="update-heading">Yazılım güncellemeleri</h2>
+<p id="installed-version">Kurulu sürüm okunuyor…</p><p class="muted">Kurulu commit: <code id="installed-commit">bilinmiyor</code></p>
+<p id="update-message" role="status">Kontrol edilmedi.</p><p id="update-release" class="muted"></p>
+<p class="row"><button id="check-updates">Güncellemeleri kontrol et</button><a id="update-website" target="_blank" rel="noopener noreferrer" hidden>Projeyi GitHub’da aç ↗</a><a id="update-releases" target="_blank" rel="noopener noreferrer" hidden>Yayın indirmeleri ↗</a></p>
+<p class="muted">Kontroller yalnızca istekte bulunulduğunda GitHub’a bağlanır ve beş dakika boyunca önbelleğe alınır. Hiçbir şey otomatik olarak indirilmez veya kurulmaz. Bu işlem BMW donanım yazılımını değil, emülatörü günceller.</p>
+<details><summary>Güncelleme nasıl kurulur</summary><p>Terminal’de emülatör proje klasörünü açın ve şunu çalıştırın:</p><pre>bash update.sh</pre><p class="muted">Bu komut izlenen dalı (yalnızca fast-forward), Lima’ya kaynak dosyalarını kopyalar ve geçerli araç profilini yeniden başlatır. Yerel değişiklikler veya ayrılmış bir sürüm etiketi elle incelenmelidir. Kodlama, ön ayarlar, simülasyonlar ve içe aktarılan BMW dosyaları korunur. ZIP indirmesi için yeni proje dosyalarını alıp mevcut VM’e karşı install.sh dosyasını çalıştırın.</p></details></section>
 <div class="columns"><div>
-<section><h2>Active coding</h2><p class="muted">Validated fakecod overrides; not coding a vehicle. Save alone does not change the running HMI.</p><textarea id="coding" aria-label="Coding JSON" spellcheck="false"></textarea><p class="row"><button id="save">Validate & save</button><button id="reload">Reload active</button><button id="export">Download JSON</button></p></section>
-<section><h2>Presets</h2><p class="row"><select id="presets" aria-label="Preset"></select><button id="load">Load into editor</button><button id="activate">Activate & save</button></p><p class="row"><input id="name" placeholder="my-preset" aria-label="New preset name"><button id="store">Save editor as preset</button><button id="delete">Delete selected</button></p><p class="muted">Built-ins are read-only. G80 BMW is experimental and needs separately supplied G80 assets; selecting coding does not install missing M-brand assets.</p></section>
-<section><h2>CAFD → preset converter</h2><p class="muted">Paste a JSON name/value object, {"overrides":{…}}, or {"entries":[{"uuid":"0x…","value":1}]}. Explicit values are converted through your firmware dictionary; numeric enums become labels. Raw binary CAFD/NCD decoding and donor defaults are not supported.</p><textarea id="source" aria-label="CAFD JSON source" spellcheck="false">{"DEVELOPER_MENU":"enabled"}</textarea><p class="row"><input type="file" id="import" accept=".json,application/json" aria-label="Import coding JSON"><button id="convert">Convert into editor</button></p></section>
-</div><section><h2>CAFD dictionary & entry builder</h2><p class="muted">Read from private firmware. Only verified meanings are described. Choose a value and add it to the editor; values are never inferred from metadata.</p><p class="row"><input id="search" placeholder="e.g. SERIES" aria-label="Search CAFD"><button id="find">Search</button></p><div id="definitions"></div></section></div>
+<section><h2>Etkin kodlama</h2><p class="muted">Doğrulanmış fakecod geçersiz kılmaları; araç kodlamaz. Yalnızca kaydetmek çalışan HMI’yı değiştirmez.</p><textarea id="coding" aria-label="Kodlama JSON'u" spellcheck="false"></textarea><p class="row"><button id="save">Doğrula ve kaydet</button><button id="reload">Etkin değerleri yeniden yükle</button><button id="export">JSON indir</button></p></section>
+<section><h2>Ön ayarlar</h2><p class="row"><select id="presets" aria-label="Ön ayar"></select><button id="load">Düzenleyiciye yükle</button><button id="activate">Etkinleştir ve kaydet</button></p><p class="row"><input id="name" placeholder="on-ayarım" aria-label="Yeni ön ayar adı"><button id="store">Düzenleyiciyi ön ayar olarak kaydet</button><button id="delete">Seçilen ön ayarı sil</button></p><p class="muted">Yerleşik ön ayarlar salt okunurdur. G80 BMW deneyseldir ve ayrı olarak sağlanmış G80 varlıklarını gerektirir; kodlama seçmek eksik M marka varlıklarını kurmaz.</p></section>
+<section><h2>CAFD → ön ayar dönüştürücü</h2><p class="muted">Bir JSON ad/değer nesnesini, {"overrides":{…}} veya {"entries":[{"uuid":"0x…","value":1}]} biçimini yapıştırın. Açık değerler donanım yazılımı sözlüğüyle dönüştürülür; sayısal enum değerleri etiketlere çevrilir. Ham ikili CAFD/NCD çözümleme ve donor varsayılanları desteklenmez.</p><textarea id="source" aria-label="CAFD JSON kaynağı" spellcheck="false">{"DEVELOPER_MENU":"enabled"}</textarea><p class="row"><input type="file" id="import" accept=".json,application/json" aria-label="Kodlama JSON'unu içe aktar"><button id="convert">Düzenleyiciye dönüştür</button></p></section>
+</div><section><h2>CAFD sözlüğü ve kayıt oluşturucu</h2><p class="muted">Özel donanım yazılımından okunur. Yalnızca doğrulanmış anlamlar açıklanır. Bir değer seçip düzenleyiciye ekleyin; değerler hiçbir zaman üst veriden çıkarılmaz.</p><p class="row"><input id="search" placeholder="ör. SERIES" aria-label="CAFD ara"><button id="find">Ara</button></p><div id="definitions"></div></section></div>
 <script>
 const message=document.querySelector('#message'),coding=document.querySelector('#coding');let available={};
 document.querySelector('#viewer').href=location.protocol+'//'+location.hostname+':'+(location.port?Number(location.port)-1:5011)+'/';
@@ -27,23 +27,23 @@ function action(selector,callback){document.querySelector(selector).onclick=asyn
 function showUpdate(result){
     const installed=result.installed;
     document.querySelector('#installed-version').textContent='Installed: '+(installed.version||installed.tag||'Unversioned folder')+' · '+(installed.branch?'branch '+installed.branch:installed.source==='git'?'detached tag/commit':'no Git history')+(installed.dirty===true?' · includes local changes':installed.dirty===null?' · local changes unknown':'');
-    document.querySelector('#installed-commit').textContent=installed.commit||'not recorded (folder/ZIP installation)';
+    document.querySelector('#installed-commit').textContent=installed.commit||'kaydedilmedi (klasör/ZIP kurulumu)';
     document.querySelector('#update-message').textContent=result.message+(result.checked_at?' Checked '+new Date(result.checked_at).toLocaleString()+'.':'');
-    document.querySelector('#update-release').textContent=result.latest_release?'Latest published release: '+result.latest_release.tag:'';
+    document.querySelector('#update-release').textContent=result.latest_release?'En son yayınlanan sürüm: '+result.latest_release.tag:'';
     const website=document.querySelector('#update-website'),releases=document.querySelector('#update-releases');
     website.hidden=!result.update_url;website.href=result.update_url||'';
-    website.textContent=result.status==='available'?'View available update on GitHub ↗':'Open project / branch on GitHub ↗';
+    website.textContent=result.status==='available'?'Kullanılabilir güncellemeyi GitHub’da görüntüle ↗':'Projeyi/dalı GitHub’da aç ↗';
     releases.hidden=!result.releases_url;releases.href=result.releases_url||'';
 }
 document.querySelector('#check-updates').onclick=async()=>{
     const button=document.querySelector('#check-updates');button.disabled=true;
-    document.querySelector('#update-message').textContent='Checking GitHub…';
+    document.querySelector('#update-message').textContent='GitHub kontrol ediliyor…';
     try{showUpdate(await request('/api/updates',{}));}
-    catch(error){document.querySelector('#update-message').textContent='Could not check for updates: '+error.message;}
+    catch(error){document.querySelector('#update-message').textContent='Güncellemeler kontrol edilemedi: '+error.message;}
     finally{button.disabled=false;}
 };
-request('/api/updates').then(showUpdate).catch(error=>document.querySelector('#update-message').textContent='Version information unavailable: '+error.message);
-async function reload(){coding.value=JSON.stringify((await request('/api/coding')).overrides,null,2);message.textContent='Loaded saved coding. Restart to apply saved changes.';}
+request('/api/updates').then(showUpdate).catch(error=>document.querySelector('#update-message').textContent='Sürüm bilgisi kullanılamıyor: '+error.message);
+async function reload(){coding.value=JSON.stringify((await request('/api/coding')).overrides,null,2);message.textContent='Kayıtlı kodlama yüklendi. Kaydedilen değişiklikleri uygulamak için yeniden başlatın.';}
 async function presets(){available=(await request('/api/presets')).presets;const select=document.querySelector('#presets');select.replaceChildren();for(const name of Object.keys(available)){const option=document.createElement('option');option.value=name;option.textContent=name;select.append(option);}}
 async function save(){await request('/api/coding',JSON.parse(coding.value));message.textContent='Saved and validated. Restart to apply.';}
 async function restart(){if(!confirm('Restart this HMI container? The viewer will disconnect during startup.'))return;const before=await request('/api/status');await request('/api/restart',{});message.textContent='Restart requested; waiting for the new container process…';const deadline=Date.now()+180000;while(Date.now()<deadline){await new Promise(resolve=>setTimeout(resolve,2000));try{const result=await request('/api/status');if(result.session!==before.session&&result.ready){message.textContent='Container restarted; renderer is ready.';return;}}catch{}}message.textContent='Restart is still pending. Check docker compose ps/logs; restart policy must be enabled.';}

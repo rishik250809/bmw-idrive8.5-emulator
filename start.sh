@@ -4,7 +4,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 bash "$here/doctor.sh"
 source "$here/scripts/common.sh"
 profile="${1:-current}"
-case "$profile" in current|g26|g80-m) ;; *) echo 'Usage: bash start.sh [g26|g80-m]' >&2; exit 2 ;; esac
+case "$profile" in current|g26|g80-m|ix20) ;; *) echo 'Usage: bash start.sh [g26|g80-m|ix20]' >&2; exit 2 ;; esac
 python3 "$ROOT/tools/boot_splash.py" stop "$ROOT" "$VIEWER_PORT"
 if [[ -f "$ROOT/.local/tunnel.pid" ]]; then
     previous="$(cat "$ROOT/.local/tunnel.pid")"

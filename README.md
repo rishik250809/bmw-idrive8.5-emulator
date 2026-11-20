@@ -109,7 +109,8 @@ pieces, creates the VM, verifies and imports your BMW files, starts the HMI,
 waits until it is on screen and opens http://localhost:5011. Allow 10–20 minutes
 for a first installation, depending on downloads and image building. Running it
 again skips finished steps. Afterwards use `bash start.sh g26` (G26),
-`bash start.sh g80-m` (G80), or `bash start.sh` to resume the current profile.
+`bash start.sh g80-m` (G80),
+`bash start.sh ix20` (BMW iX i20, experimental), or `bash start.sh` to resume the current profile.
 
 **C. From a prepared private bundle** (`private/runtime.tar.gz`, made from your
 own files; never share it):
@@ -246,6 +247,9 @@ and `bash start.sh` to rebuild and load the compatibility library in the VM.
 - `full-g26`: G26 BEV (i4), BMW brand, electric, navigation, home tiles. (**proper coding**)
 - `full-g80`: G80 LCI (M3), BMW M brand, petrol, Isle of Man Green and the
   tested M feature flags. (**proper coding**)
+- `full-ix20`: tentative i20/I20 xDrive40 BMW i brand coding. (**experimental;
+  iX-specific vehicle/graphics assets must be supplied and verified; not yet
+  a validated iX profile**)
 - More in the future!
 
 If the brand/model is specified as `HMI_BRAND`: `bmw_m`, it mounts the BMW M brand package

@@ -179,9 +179,10 @@ imported = {item['sgbm'] for item in plan['items']}
 g26 = json.loads((config / 'full-g26.json').read_text())
 (state / 'config/coding.json').write_text(json.dumps(g26, indent=2) + '\n')
 (state / 'config/profiles/g26.json').write_text(json.dumps(g26, indent=2) + '\n')
+shutil.copy(config / 'full-ix20.json', state / 'config/profiles/ix20.json')
 if {'a6b2', 'a691'} <= imported:
     shutil.copy(config / 'full-g80.json', state / 'config/profiles/g80-m.json')
-for profile in ('g26', 'g80lci-m'):
+for profile in ('g26', 'g80lci-m', 'ix20'):
     for area in ('public', 'personal', 'mock'):
         (state / 'profiles' / profile / area).mkdir(parents=True, exist_ok=True)
 (state / 'profiles/.initialized').touch()

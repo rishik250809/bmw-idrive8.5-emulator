@@ -1,26 +1,26 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hmi8 viewer</title>
+<title>Hmi8 görüntüleyici</title>
 <style>
 :root{color-scheme:dark;font:15px system-ui;background:#10131a;color:#e4e9f3}body{margin:24px auto;padding:0 18px;max-width:1800px}canvas{display:block;width:100%;aspect-ratio:3;background:black;touch-action:none;user-select:none;border:1px solid #344057}button,a{font:inherit;color:#a1c8ff;background:#202838;border:1px solid #40516e;border-radius:5px;padding:8px;cursor:pointer}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.muted{color:#9da9bf}#message{color:#f3c982}
 </style>
-<h1>Hmi8 viewer</h1>
-<p class="row"><a id="settings" target="_blank" rel="noopener">Coding & settings ↗</a><button id="display-on">Enable lab touch</button><button id="reconnect">Reconnect</button></p>
-<p id="status">Waiting for renderer…</p>
-<canvas id="screen" width="1440" height="480" aria-label="Hmi8 touchscreen"></canvas>
+<h1>Hmi8 görüntüleyici</h1>
+<p class="row"><a id="settings" target="_blank" rel="noopener">Kodlama ve ayarlar ↗</a><button id="display-on">Laboratuvar dokunmasını etkinleştir</button><button id="reconnect">Yeniden bağlan</button></p>
+<p id="status">İşleyici bekleniyor…</p>
+<canvas id="screen" width="1440" height="480" aria-label="Hmi8 dokunmatik ekranı"></canvas>
 <p id="message" role="status"></p>
-<p class="muted">Native 2880 × 960. Latest-frame display: one fetch/decode at a time, no queued video frames. Capture FPS is not animation FPS. HMI rendering uses ANGLE/Venus and the Mac GPU; composition uses pixman.</p>
+<p class="muted">Yerel çözünürlük 2880 × 960. Son kare görüntülenir: tek seferde bir çekme/çözme işlemi, sıra bekleyen video karesi yok. Yakalama FPS değeri animasyon FPS değeri değildir. HMI çizimi ANGLE/Venus ve Mac GPU kullanır; bileşik oluşturma pixman kullanır.</p>
 <script>
 function startViewer(initialImage=null,initialSequence=-1){
 const screen=document.querySelector('#screen'),context=screen.getContext('2d',{alpha:false}),message=document.querySelector('#message');
 document.querySelector('#settings').href=location.protocol+'//'+location.hostname+':'+(location.port?Number(location.port)+1:5012)+'/';
 document.querySelectorAll('button').forEach(button=>button.disabled=false);
-if(initialImage){screen.width=initialImage.width;screen.height=initialImage.height;context.drawImage(initialImage,0,0);initialImage.close();message.textContent='';document.querySelector('#status').textContent='Live · native HMI connected';}
+if(initialImage){screen.width=initialImage.width;screen.height=initialImage.height;context.drawImage(initialImage,0,0);initialImage.close();message.textContent='';document.querySelector('#status').textContent='Canlı · yerel HMI bağlandı';}
 async function request(path,body){const response=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Hmi8-Request':'1'},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error||response.status);return result;}
 let sequence=initialSequence,displayed=initialImage?1:0,roundTrip=0;
 const delay=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
-async function frames(){while(true){if(document.hidden){await delay(250);continue;}try{const started=performance.now();const response=await fetch('/frame.jpg?after='+sequence,{cache:'no-store',signal:AbortSignal.timeout(5000)});if(!response.ok)throw Error('Waiting for Hmi8');const next=Number(response.headers.get('X-Hmi8-Sequence'));const image=await createImageBitmap(await response.blob());if(screen.width!==image.width||screen.height!==image.height){screen.width=image.width;screen.height=image.height;}context.drawImage(image,0,0);image.close();sequence=next;displayed++;roundTrip=performance.now()-started;}catch(error){message.textContent=error.message;await delay(500);}}}
+async function frames(){while(true){if(document.hidden){await delay(250);continue;}try{const started=performance.now();const response=await fetch('/frame.jpg?after='+sequence,{cache:'no-store',signal:AbortSignal.timeout(5000)});if(!response.ok)throw Error('Hmi8 bekleniyor');const next=Number(response.headers.get('X-Hmi8-Sequence'));const image=await createImageBitmap(await response.blob());if(screen.width!==image.width||screen.height!==image.height){screen.width=image.width;screen.height=image.height;}context.drawImage(image,0,0);image.close();sequence=next;displayed++;roundTrip=performance.now()-started;}catch(error){message.textContent=error.message;await delay(500);}}}
 let activePointer=null,busy=false,pendingMove=null,transitions=[],inputLatency=0;
 async function pump(){if(busy)return;busy=true;try{while(transitions.length||pendingMove){const command=transitions.length?transitions.shift():pendingMove;if(command===pendingMove)pendingMove=null;const started=performance.now();await request('/api/touch',command);inputLatency=performance.now()-started;}}catch(error){message.textContent=error.message;pendingMove=null;transitions=[];activePointer=null;try{await request('/api/touch',{action:'up'});}catch{}}finally{busy=false;}}
 function touch(action,event){const command={action};if(event){const bounds=screen.getBoundingClientRect();command.x=Math.round((event.clientX-bounds.left)/bounds.width*2880);command.y=Math.round((event.clientY-bounds.top)/bounds.height*960);}if(action==='move')pendingMove=command;else{if(action==='up'&&pendingMove)transitions.push(pendingMove);pendingMove=null;if(transitions.length>=8){activePointer=null;transitions=[{action:'up'}];}else transitions.push(command);}pump();}
@@ -30,9 +30,9 @@ function release(event){if(activePointer===null||(event&&event.pointerId!==activ
 screen.onpointerup=release;screen.onpointercancel=release;screen.onlostpointercapture=release;window.onblur=()=>release();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)release();});
 document.querySelector('#display-on').onclick=()=>request('/api/touch',{action:'display-on'}).catch(error=>message.textContent=error.message);
-document.querySelector('#reconnect').onclick=()=>{sequence=-1;message.textContent='Reconnecting…';};
+document.querySelector('#reconnect').onclick=()=>{sequence=-1;message.textContent='Yeniden bağlanılıyor…';};
 let previousFrames=null,previousDisplayed=0,previousTime=performance.now();
-async function status(){try{const result=await request('/api/status');const now=performance.now(),elapsed=(now-previousTime)/1000;const capture=previousFrames===null?'—':Math.max(0,(result.frames-previousFrames)/elapsed).toFixed(1);const delivered=((displayed-previousDisplayed)/elapsed).toFixed(1);previousFrames=result.frames;previousDisplayed=displayed;previousTime=now;document.querySelector('#status').textContent=(result.ready?'Live':'Starting')+' · capture '+capture+' fps · displayed '+delivered+' fps · fetch/decode '+roundTrip.toFixed(0)+' ms · input ACK '+inputLatency.toFixed(0)+' ms · scale 1/'+result.preview_scale;if(result.ready)message.textContent='';else if(result.error)message.textContent=result.error;}catch(error){message.textContent=error.message;previousFrames=null;}setTimeout(status,2000);}
+async function status(){try{const result=await request('/api/status');const now=performance.now(),elapsed=(now-previousTime)/1000;const capture=previousFrames===null?'—':Math.max(0,(result.frames-previousFrames)/elapsed).toFixed(1);const delivered=((displayed-previousDisplayed)/elapsed).toFixed(1);previousFrames=result.frames;previousDisplayed=displayed;previousTime=now;document.querySelector('#status').textContent=(result.ready?'Canlı':'Başlatılıyor')+' · yakalama '+capture+' fps · görüntülenen '+delivered+' fps · çekme/çözme '+roundTrip.toFixed(0)+' ms · giriş yanıtı '+inputLatency.toFixed(0)+' ms · ölçek 1/'+result.preview_scale;if(result.ready)message.textContent='';else if(result.error)message.textContent=result.error;}catch(error){message.textContent=error.message;previousFrames=null;}setTimeout(status,2000);}
 frames();status();
 }
 if(!document.documentElement.hasAttribute('data-boot-console'))startViewer();

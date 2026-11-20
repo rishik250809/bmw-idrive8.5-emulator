@@ -29,6 +29,7 @@ prove visible rendering.
 | --- | --- | --- | --- | --- |
 | G80 M | G080LCI / bmw_m | A6B2 007_023_004, plus BMW/shared resources | A691 007_023_004 / G80LCI | profiles/g80lci-m |
 | G26 BMW | G026BEV / bmw | A6B1 007_023_004 / BMW shared | AED4 007_023_004 / G26BEV | profiles/g26 |
+| iX i20 (experimental) | I20 / bmw_i | not verified; requires iX-specific resources | not verified | profiles/ix20 |
 
 Both retain the working ANGLE/Venus/Metal rendering path and native 2880x960
 geometry. Preview scale is 2; target capture rate is 60, not a verified 60 fps

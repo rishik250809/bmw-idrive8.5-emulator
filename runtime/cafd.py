@@ -25,7 +25,7 @@ MEANINGS = {
     'DISPLAY_RES_WIDTH': 'Native scene width in pixels. The validated lab profile uses 2880.',
     'DISPLAY_RES_HEIGHT': 'Native scene height in pixels. The validated lab profile uses 960.',
     'DISPLAY_SIZE': 'Display diagonal in hundredths of an inch: 1490 means 14.90 inches.',
-    'SERIES': 'Vehicle series selection. G026BEV=46, G080=21 (original M3), G080LCI=73. Selection does not install vehicle assets.',
+    'SERIES': 'Vehicle series selection. G026BEV=46, G080=21 (original M3), G080LCI=73. I20 is a tentative iX/ i20 profile label; verify it against CAFD metadata and vehicle assets.',
     'HMI_BRAND': 'HMI brand selection: bmw=0, bmw_i=1, mini=2, rolls_royce=3, bmw_m=4. BMW M also requires matching bmwm brand resources.',
     'CID_TOUCH': 'CID touchscreen availability. This lab supplies a virtual Linux touchscreen.',
     'CID_HMI_TOUCH': 'Enables HMI touch interaction.',
@@ -156,8 +156,8 @@ def load_coding(metadata, config):
     geometry = tuple(int(normalized[name]) for name in ('DISPLAY_RES_WIDTH', 'DISPLAY_RES_HEIGHT'))
     if geometry != (2880, 960) or normalized['DISPLAY_SIZE'] != '1490':
         raise ValueError('This lab currently supports only the verified 2880×960 / 14.9-inch profile')
-    if normalized['SERIES'] not in ('G026BEV', 'G080', 'G080LCI', 'G082LCI'):
-        raise ValueError('Supported lab series: G026BEV, G080 (experimental), G080LCI or G082LCI')
+    if normalized['SERIES'] not in ('G026BEV', 'G080', 'G080LCI', 'G082LCI', 'I20'):
+        raise ValueError('Supported lab series: G026BEV, G080 (experimental), G080LCI, G082LCI or I20 (experimental)')
     if normalized['SERIES'] in ('G080', 'G080LCI', 'G082LCI') and normalized.get('HMI_BRAND') not in ('bmw', 'bmw_m'):
         raise ValueError('The G80 profiles require HMI_BRAND bmw or bmw_m')
     return normalized
@@ -210,7 +210,7 @@ def main():
             if options.command == 'geometry':
                 print(coding['DISPLAY_RES_WIDTH'], coding['DISPLAY_RES_HEIGHT'])
             elif options.command == 'profile':
-                prefix = {'G080': 'g80', 'G080LCI': 'g80lci', 'G082LCI': 'g82lci'}.get(coding['SERIES'])
+                prefix = {'G080': 'g80', 'G080LCI': 'g80lci', 'G082LCI': 'g82lci', 'I20': 'ix20'}.get(coding['SERIES'])
                 m = coding.get('HMI_BRAND') == 'bmw_m'
                 print(f"{prefix}-{'m' if m else 'bmw'}" if prefix else ('g26-m' if m else 'g26'))
             elif options.command == 'effective':

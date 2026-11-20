@@ -21,18 +21,18 @@ async function poll(){
     if(response.ok){
       const boot=await response.json();
       document.querySelector('#status').textContent=boot.message;
-      document.querySelector('#message').textContent='Live Linux serial console. The HMI takes over automatically.';
+      document.querySelector('#message').textContent='Canlı Linux seri konsolu. HMI otomatik olarak devralır.';
       drawConsole(boot.console||'');
     }else{handedOver=true;}
   }catch{}
   if(handedOver){
     if(waitingSince===null)waitingSince=performance.now();
-    document.querySelector('#status').textContent='Linux is ready. Waiting for the native HMI image…';
+    document.querySelector('#status').textContent='Linux hazır. Yerel HMI görüntüsü bekleniyor…';
     document.querySelector('#message').textContent='';
     try{
       const response=await fetch('/api/status',{cache:'no-store',signal:AbortSignal.timeout(2000)});
       const status=await response.json();
-      if(performance.now()-waitingSince>=90000)document.querySelector('#message').textContent='HMI output is taking longer than expected.'+(status.error?' '+status.error:'');
+      if(performance.now()-waitingSince>=90000)document.querySelector('#message').textContent='HMI çıktısı beklenenden uzun sürüyor.'+(status.error?' '+status.error:'');
       if(status.ready){
         const frame=await fetch('/frame.jpg',{cache:'no-store',signal:AbortSignal.timeout(5000)});
         if(frame.ok){
