@@ -108,8 +108,10 @@ It installs the Homebrew tools, downloads and verifies the open-source graphics
 pieces, creates the VM, verifies and imports your BMW files, starts the HMI,
 waits until it is on screen and opens http://localhost:5011. Allow 10–20 minutes
 for a first installation, depending on downloads and image building. Running it
-again skips finished steps. Afterwards use `bash start.sh g26` (G26),
-`bash start.sh g80-m` (G80), or `bash start.sh` to resume the current profile.
+again skips finished steps. Afterwards use `bash start.sh ix40` (default: BMW iX xDrive40),
+`bash start.sh ix20` (iX i20 compatibility alias), `bash start.sh g26` (G26),
+or `bash start.sh g80-m` (G80). iX names are experimental until iX-specific
+vehicle and graphics assets are supplied and verified.
 
 **C. From a prepared private bundle** (`private/runtime.tar.gz`, made from your
 own files; never share it):
@@ -126,8 +128,8 @@ Open `http://localhost:5011` for viewer/touch and `http://localhost:5012` for
 coding/settings. Music/climate controls are at `http://localhost:5012/mocks`.
 Allow around one minute for initialization.
 
-Switch to the ordinary BMW electric setup with `bash start.sh g26`.
-No argument restarts the current profile. One renderer runs at a time.
+Switch profiles with `bash start.sh g26`, `bash start.sh g80-m`, or
+`bash start.sh ix40`. No argument starts the iX40 profile. One renderer runs at a time.
 `bash stop.sh` stops the container; `bash stop.sh --vm` also shuts down the VM.
 The settings Restart button restarts only the container.
 
@@ -246,6 +248,10 @@ and `bash start.sh` to rebuild and load the compatibility library in the VM.
 - `full-g26`: G26 BEV (i4), BMW brand, electric, navigation, home tiles. (**proper coding**)
 - `full-g80`: G80 LCI (M3), BMW M brand, petrol, Isle of Man Green and the
   tested M feature flags. (**proper coding**)
+- `full-ix40`: tentative i20/I20 xDrive40 BMW i brand coding. (**experimental;
+  default iX40 profile; `full-ix20` is retained as a compatibility alias**)
+  iX-specific vehicle/graphics assets must be supplied and verified; not yet
+  a validated iX profile**)
 - More in the future!
 
 If the brand/model is specified as `HMI_BRAND`: `bmw_m`, it mounts the BMW M brand package

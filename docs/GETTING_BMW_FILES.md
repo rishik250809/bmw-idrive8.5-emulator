@@ -78,7 +78,9 @@ Matching your car is not required; the emulator only needs one consistent set.
 ```sh
 bash import.sh /path/to/psdzdata              # or a folder with the packages
 bash import.sh /path/to/folder --version 007_023_004   # pick a release
-bash start.sh                                  # G26
+bash start.sh ix40                            # BMW iX xDrive40 (default; experimental)
+bash start.sh                                  # iX40 when no argument is provided
+bash start.sh g26                             # G26
 bash start.sh g80-m                            # G80 M (needs A6B2 + A691)
 ```
 

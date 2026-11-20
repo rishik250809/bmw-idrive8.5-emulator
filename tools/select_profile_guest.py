@@ -12,8 +12,9 @@ import tempfile
 STATE = pathlib.Path(os.environ.get('BMW_STATE', '/srv/bmw-idrive85/state'))
 TOOLS = pathlib.Path(os.environ.get('BMW_RUNTIME', '/srv/bmw-idrive85/source/runtime'))
 CONTAINER = os.environ.get('BMW_CONTAINER', 'bmw-idrive85')
-PROFILES = {'g80-m': 'g80lci-m', 'g26': 'g26'}
-PRESETS = {'g80-m': 'full-g80.json', 'g26': 'full-g26.json'}
+PROFILES = {'g80-m': 'g80lci-m', 'g26': 'g26', 'ix20': 'ix20'}
+PRESETS = {'g80-m': 'full-g80.json', 'g26': 'full-g26.json', 'ix20': 'full-ix20.json', 'ix40': 'full-ix40.json'}
+ALIASES = {'ix40': 'ix20'}
 
 
 def profile_defaults(name):
@@ -42,6 +43,8 @@ def write_json(destination, document):
 
 
 def identify(coding):
+    if coding.get('SERIES') == 'I20' and coding.get('HMI_BRAND') == 'bmw_i':
+        return 'ix20'
     if coding.get('SERIES') == 'G080LCI' and coding.get('HMI_BRAND') == 'bmw_m':
         return 'g80-m'
     if coding.get('SERIES', 'G026BEV') == 'G026BEV' and coding.get('HMI_BRAND', 'bmw') == 'bmw':
@@ -51,8 +54,9 @@ def identify(coding):
 
 def main():
     parser = argparse.ArgumentParser(description='Switch isolated private HMI GPU profiles; one renderer at a time')
-    parser.add_argument('profile', choices=['current', *PROFILES])
+    parser.add_argument('profile', choices=['current', *PROFILES, 'ix40'])
     options = parser.parse_args()
+    selected_name = ALIASES.get(options.profile, options.profile)
     sys.path.insert(0, str(TOOLS))
     from cafd import Cafd, load_coding
 
@@ -62,7 +66,7 @@ def main():
         config = STATE / 'config/coding.json'
         current_coding = json.loads(config.read_text())
         current = identify(current_coding)
-        selected = current if options.profile == 'current' else options.profile
+        selected = current if selected_name == 'current' else selected_name
         saved = STATE / 'config/profiles'
         write_json(saved / f'{current}.json', current_coding)  # 'custom' keeps any other combination
         for name in PROFILES:
@@ -82,7 +86,8 @@ def main():
         target_coding = load_coding(metadata, candidate)
         if identify(target_coding) != selected:
             raise ValueError('Saved profile coding does not match its name')
-        required = ['a6b0', 'a6b1', 'aed4'] + (['a6b2', 'a691'] if selected == 'g80-m' else [])
+        required = ['a6b0', 'a6b1'] + (['aed4'] if selected == 'g26' else [])
+        required += ['a6b2', 'a691'] if selected == 'g80-m' else []
         for sgbm in required:
             found = sorted((STATE / 'resources').glob(f'swfk_0000{sgbm}_*/rootfs/hmi_version'))
             if not found:

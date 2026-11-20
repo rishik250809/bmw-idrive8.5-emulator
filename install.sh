@@ -115,7 +115,7 @@ fi
 say 'Starting the HMI'
 if $installed; then bash scripts/sync_source.sh; fi
 bash scripts/ensure_tools.sh
-bash start.sh >/dev/null
+bash start.sh ix40 >/dev/null
 
 say 'Waiting for the HMI to appear (about 1-2 minutes)'
 deadline=$((SECONDS + 600))
@@ -140,7 +140,7 @@ else
     stable_since=0
     if [[ "$status" -eq 75 && "$boot_retries" -lt 2 ]]; then
         boot_retries=$((boot_retries + 1))
-        printf '\n  G26 startup trapped during shader initialization; saving logs and retrying (%s/2).\n' "$boot_retries"
+        printf '\niX40 startup trapped during shader initialization; saving logs and retrying (%s/2).\n' "$boot_retries"
         limactl shell --workdir=/tmp "$VM" -- sudo bash -s -- "$boot_retries" <<'GUEST'
 set -euo pipefail
 logs=/srv/bmw-idrive85/state/logs

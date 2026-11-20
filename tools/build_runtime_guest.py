@@ -176,12 +176,15 @@ config = options.source / 'config'
 imported = {item['sgbm'] for item in plan['items']}
 (state / 'config/presets').mkdir(parents=True, exist_ok=True)
 (state / 'config/profiles').mkdir(parents=True, exist_ok=True)
-g26 = json.loads((config / 'full-g26.json').read_text())
-(state / 'config/coding.json').write_text(json.dumps(g26, indent=2) + '\n')
-(state / 'config/profiles/g26.json').write_text(json.dumps(g26, indent=2) + '\n')
+ix40 = json.loads((config / 'full-ix40.json').read_text())
+(state / 'config/coding.json').write_text(json.dumps(ix40, indent=2) + '\n')
+(state / 'config/profiles/ix40.json').write_text(json.dumps(ix40, indent=2) + '\n')
+(state / 'config/profiles/g26.json').write_text(json.dumps(json.loads((config / 'full-g26.json').read_text()), indent=2) + '\n')
+shutil.copy(config / 'full-ix20.json', state / 'config/profiles/ix20.json')
+shutil.copy(config / 'full-ix40.json', state / 'config/profiles/ix40.json')
 if {'a6b2', 'a691'} <= imported:
     shutil.copy(config / 'full-g80.json', state / 'config/profiles/g80-m.json')
-for profile in ('g26', 'g80lci-m'):
+for profile in ('g26', 'g80lci-m', 'ix20', 'ix40'):
     for area in ('public', 'personal', 'mock'):
         (state / 'profiles' / profile / area).mkdir(parents=True, exist_ok=True)
 (state / 'profiles/.initialized').touch()

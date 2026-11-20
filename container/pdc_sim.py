@@ -184,8 +184,12 @@ class PdcSimulator:
             profile = (STATE / 'logs/active-profile.txt').read_text().strip()
         except OSError:
             profile = ''
-        series, brand = ('va_BAUREIHE_G26', 'HMI_BRAND_bmw_i') if profile.startswith('g26') else \
-            ('va_BAUREIHE_G80LCI', 'HMI_BRAND_bmw_m')
+        if profile.startswith(('ix20', 'ix40')):
+            series, brand = ('va_BAUREIHE_I20', 'HMI_BRAND_bmw_i')
+        elif profile.startswith('g26'):
+            series, brand = ('va_BAUREIHE_G26', 'HMI_BRAND_bmw_i')
+        else:
+            series, brand = ('va_BAUREIHE_G80LCI', 'HMI_BRAND_bmw_m')
         for filename, changes in (
                 ('didcodings.json', {'baureiheCoding': series, 'hmiBrandCoding': brand,
                                      'distanceUnitCoding': 'DISTANCE_UNIT_km_only'}),
