@@ -42,4 +42,4 @@ for name in ("bmw-runtime.tar.gz", "bmw-tools-image.tar.gz", "bmw-import.py"):
     (pathlib.Path("/var/tmp/bmw-idrive85-install") / name).unlink(missing_ok=True)
 (pathlib.Path("/tmp") / "bmw-source.tar.gz").unlink(missing_ok=True)
 '
-printf 'Installed private runtime. Run: bash start.sh g80-m (or g26).\n'
+printf 'Installed private runtime. Run: bash start.sh ix40 (default iX xDrive40).\n'

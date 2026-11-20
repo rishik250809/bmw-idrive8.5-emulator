@@ -84,4 +84,4 @@ else
 fi
 limactl shell --workdir=/tmp "$VM" -- sudo sh -c "rm -rf $staging /tmp/bmw-source.tar.gz /tmp/bmw-import-plan.json /tmp/bmw-driver.tar.gz /tmp/bmw-tools-image.tar.gz"
 if [[ -n "$extracted" ]]; then rm -rf "$ROOT/.local/extracted-import"; fi
-printf '\nImport complete. Start with: bash start.sh            (G26)\n                            bash start.sh g80-m      (G80 M, if A6B2 and A691 were imported)\n'
+printf '\nImport complete. Start with: bash start.sh ix40          (BMW iX xDrive40, experimental)\n                            bash start.sh g26            (G26)\n                            bash start.sh g80-m          (G80 M, if A6B2 and A691 were imported)\n'

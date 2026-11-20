@@ -62,11 +62,11 @@ with gzip.GzipFile(fileobj=sys.stdout.buffer, mode='wb', compresslevel=1, mtime=
         archive.add(driver, arcname='driver', filter=filter_member)
         coding = json.loads((state / 'config/coding.json').read_text())
         if coding.get('SERIES') == 'I20':
-            current = 'ix20'
+            current = 'ix40' if coding.get('SERIES') == 'I20' else 'ix20'
         else:
             current = 'g80-m' if coding.get('HMI_BRAND') == 'bmw_m' else 'g26'
         add_json(archive, 'state/config/coding.json', coding)
-        for profile, runtime in (('g26', 'g26'), ('g80-m', 'g80lci-m'), ('ix20', 'ix20')):
+        for profile, runtime in (('g26', 'g26'), ('g80-m', 'g80lci-m'), ('ix20', 'ix20'), ('ix40', 'ix20')):
             saved = coding if profile == current else json.loads((state / f'config/profiles/{profile}.json').read_text())
             add_json(archive, f'state/config/profiles/{profile}.json', saved)
             add_json(archive, f'state/config/presets/gpu-{profile}.json', saved)

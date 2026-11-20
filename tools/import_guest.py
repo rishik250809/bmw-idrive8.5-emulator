@@ -32,7 +32,7 @@ with tarfile.open(sys.argv[1], 'r:gz') as archive:
     for member in members:
         if member.issym():
             archive.extract(member, destination, filter='fully_trusted')
-for profile in ('g26', 'g80lci-m', 'ix20'):
+for profile in ('g26', 'g80lci-m', 'ix20', 'ix40'):
     for area in ('public', 'personal', 'mock'):
         target = destination / 'state/profiles' / profile / area
         if not target.resolve().is_relative_to(destination):

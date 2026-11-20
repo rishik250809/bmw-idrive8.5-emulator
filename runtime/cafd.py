@@ -210,7 +210,7 @@ def main():
             if options.command == 'geometry':
                 print(coding['DISPLAY_RES_WIDTH'], coding['DISPLAY_RES_HEIGHT'])
             elif options.command == 'profile':
-                prefix = {'G080': 'g80', 'G080LCI': 'g80lci', 'G082LCI': 'g82lci', 'I20': 'ix20'}.get(coding['SERIES'])
+                prefix = {'G080': 'g80', 'G080LCI': 'g80lci', 'G082LCI': 'g82lci', 'I20': 'ix40'}.get(coding['SERIES'])
                 m = coding.get('HMI_BRAND') == 'bmw_m'
                 print(f"{prefix}-{'m' if m else 'bmw'}" if prefix else ('g26-m' if m else 'g26'))
             elif options.command == 'effective':

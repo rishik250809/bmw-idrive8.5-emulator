@@ -417,7 +417,7 @@ def presets():
             if path.stem == 'assets':
                 continue
             output[path.stem] = json.loads(path.read_text())
-    for name, canonical in (('gpu-g26', 'full-g26'), ('gpu-g80-m', 'full-g80'), ('gpu-ix20', 'full-ix20')):
+    for name, canonical in (('gpu-g26', 'full-g26'), ('gpu-g80-m', 'full-g80'), ('gpu-ix20', 'full-ix20'), ('gpu-ix40', 'full-ix40')):
         if name in output and canonical in output and output[name] == output[canonical]:
             del output[name]
     return output

@@ -13,7 +13,8 @@ STATE = pathlib.Path(os.environ.get('BMW_STATE', '/srv/bmw-idrive85/state'))
 TOOLS = pathlib.Path(os.environ.get('BMW_RUNTIME', '/srv/bmw-idrive85/source/runtime'))
 CONTAINER = os.environ.get('BMW_CONTAINER', 'bmw-idrive85')
 PROFILES = {'g80-m': 'g80lci-m', 'g26': 'g26', 'ix20': 'ix20'}
-PRESETS = {'g80-m': 'full-g80.json', 'g26': 'full-g26.json', 'ix20': 'full-ix20.json'}
+PRESETS = {'g80-m': 'full-g80.json', 'g26': 'full-g26.json', 'ix20': 'full-ix20.json', 'ix40': 'full-ix40.json'}
+ALIASES = {'ix40': 'ix20'}
 
 
 def profile_defaults(name):
@@ -53,8 +54,9 @@ def identify(coding):
 
 def main():
     parser = argparse.ArgumentParser(description='Switch isolated private HMI GPU profiles; one renderer at a time')
-    parser.add_argument('profile', choices=['current', *PROFILES])
+    parser.add_argument('profile', choices=['current', *PROFILES, 'ix40'])
     options = parser.parse_args()
+    selected_name = ALIASES.get(options.profile, options.profile)
     sys.path.insert(0, str(TOOLS))
     from cafd import Cafd, load_coding
 
@@ -64,7 +66,7 @@ def main():
         config = STATE / 'config/coding.json'
         current_coding = json.loads(config.read_text())
         current = identify(current_coding)
-        selected = current if options.profile == 'current' else options.profile
+        selected = current if selected_name == 'current' else selected_name
         saved = STATE / 'config/profiles'
         write_json(saved / f'{current}.json', current_coding)  # 'custom' keeps any other combination
         for name in PROFILES:

@@ -184,7 +184,7 @@ class PdcSimulator:
             profile = (STATE / 'logs/active-profile.txt').read_text().strip()
         except OSError:
             profile = ''
-        if profile.startswith('ix20'):
+        if profile.startswith(('ix20', 'ix40')):
             series, brand = ('va_BAUREIHE_I20', 'HMI_BRAND_bmw_i')
         elif profile.startswith('g26'):
             series, brand = ('va_BAUREIHE_G26', 'HMI_BRAND_bmw_i')

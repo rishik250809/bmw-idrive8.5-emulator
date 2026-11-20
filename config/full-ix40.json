@@ -1,0 +1,9 @@
+{
+  "SERIES": "I20",
+  "HMI_BRAND": "bmw_i",
+  "TYPE_OF_FUEL": "electro",
+  "NAVI_VARIANT": "ece",
+  "DEVELOPER_MENU": "enabled",
+  "SPORT_DISPLAYS": "id8_layout",
+  "DISTANCE_UNIT": "km_only"
+}
